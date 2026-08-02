@@ -58,7 +58,7 @@ static void img_char(Image* im, int x, int y, char c, uint8_t r, uint8_t g, uint
     for (int row = 0; row < FONT_H; row++) {
         uint8_t bits = glyph[row];
         for (int col = 0; col < FONT_W; col++) {
-            if (bits & (1 << col)) img_set(im, x + col, y + row, r, g, b);
+            if (bits & (1 << (FONT_W - 1 - col))) img_set(im, x + col, y + row, r, g, b);
         }
     }
 }
@@ -272,6 +272,32 @@ static Image* render(plot_trace_t* traces, int n_traces, int x_min, int x_max, i
             prev_px = px;
             prev_py = py;
             prev_ok = 1;
+        }
+    }
+
+    /* ---------- axis crossing labels ---------- */
+    for (int t = 0; t < n_traces; t++) {
+        for (int i = 0; i < nsamp - 1; i++) {
+            double y0 = y_all[t][i];
+            double y1 = y_all[t][i + 1];
+            if (isnan(y0) || isnan(y1) || isinf(y0) || isinf(y1)) continue;
+            if ((y0 > 0 && y1 < 0) || (y0 < 0 && y1 > 0)) {
+                // linear interpolation of crossing
+                double t_interp = -y0 / (y1 - y0);
+                double x_cross = x_val[i] + t_interp * (x_val[i + 1] - x_val[i]);
+                int px = map_x(&map, x_cross);
+                int py = map_y(&map, 0.0);
+                // black dot at crossing
+                for (int dy = -1; dy <= 1; dy++)
+                    for (int dx = -1; dx <= 1; dx++)
+                        img_set(im, px + dx, py + dy, 0, 0, 0);
+                // label with x-coordinate
+                char buf[32];
+                snprintf(buf, sizeof(buf), "%.4g", x_cross);
+                int tw = text_width(buf);
+                // place above the dot
+                img_text(im, px - tw / 2, py - FONT_H - 2, buf, 0, 0, 0);
+            }
         }
     }
 

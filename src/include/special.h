@@ -9,5 +9,6 @@ num_t sine(num_t x);
 num_t cosine(num_t x);
 num_t psi(num_t x);
 num_t spectral_psi(num_t x);
+num_t hardy_z(num_t x);
 
 #endif // SPECIAL_H
