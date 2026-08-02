@@ -1,15 +1,14 @@
 ---
 # ============================================================================
-# SYNOVIUM SPARTAN C STYLE
+# C STYLE
 # ============================================================================
-Language:        C
-BasedOnStyle:    LLVM
+BasedOnStyle: LLVM
 
 # --- Core Indentation & Spacing ---
-IndentWidth:     4
-TabWidth:        4
-UseTab:          Never
-ColumnLimit:     120
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 120
 
 # --- Pointer Alignment ---
 # Enforces `Node* node` over `Node *node`
@@ -31,13 +30,13 @@ IndentCaseLabels: true
 AlignAfterOpenBracket: Align
 AlignConsecutiveAssignments: false
 AlignConsecutiveDeclarations: false
-AlignOperands:   true
+AlignOperands: true
 AlignTrailingComments: true
 
 # --- Includes ---
-# Prevents clang-format from arbitrarily reordering your specific <llvm-c> 
+# Prevents clang-format from arbitrarily reordering your specific <llvm-c>
 # and local "" includes, which can sometimes break compilation order.
-SortIncludes:    false
+SortIncludes: false
 
 # --- Function Declarations ---
 BinPackArguments: true
@@ -48,7 +47,7 @@ AllowAllParametersOfDeclarationOnNextLine: true
 SpaceAfterCStyleCast: false
 SpaceBeforeParens: ControlStatements
 MacroBlockBegin: "^$"
-MacroBlockEnd:   "^$"
+MacroBlockEnd: "^$"
 
 # --- Empty Lines ---
 KeepEmptyLinesAtTheStartOfBlocks: false
