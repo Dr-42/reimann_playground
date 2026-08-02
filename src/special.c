@@ -1,6 +1,36 @@
 #include "special.h"
 #include <math.h>
 
+// Identity function
+num_t identity(num_t x) {
+    num_t result = {.type = DOUBLE, .d = 0.0};
+    if (x.type == INT)
+        result.d = (double)x.i;
+    else if (x.type == DOUBLE)
+        result.d = x.d;
+    else
+        result.d = sqrt(x.real * x.real + x.imag * x.imag);
+    return result;
+}
+
+// Chebyshev function
+num_t psi(num_t x) {
+    num_t result = {.type = DOUBLE, .d = 0.0};
+    double val = 0.0;
+    if (x.type == INT)
+        val = (double)x.i;
+    else if (x.type == DOUBLE)
+        val = x.d;
+    else
+        return result; // COMPLEX not supported for psi yet
+
+    for (int i = 1; i <= val; i++) {
+        num_t input = {.type = INT, .i = i};
+        result.d += lambda(input).d;
+    }
+    return result;
+}
+
 num_t lambda(num_t x) {
     num_t result = {.type = DOUBLE, .d = 0.0};
 
