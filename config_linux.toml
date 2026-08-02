@@ -3,9 +3,9 @@ compiler = "clang"
 
 [[targets]]
 name = "main"
-src = "./src/"
-include_dir = "./src/include/"
+src = "src"
+include_dir = "src/include"
 type = "exe"
 cflags = "-g -Wall -Wextra"
-libs = ""
+libs = "-lm"
 deps = [""]
