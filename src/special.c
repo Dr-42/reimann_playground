@@ -2,7 +2,7 @@
 #include <math.h>
 
 num_t lambda(num_t x) {
-    num_t result = { .type = DOUBLE, .d = 0.0 };
+    num_t result = num_new_double(0.0);
 
     if (x.type != INT || x.i <= 1) return result;
 
@@ -18,7 +18,8 @@ num_t lambda(num_t x) {
     if (p == 0) p = n;
 
     int temp = n;
-    while (temp % p == 0) temp /= p;
+    while (temp % p == 0)
+        temp /= p;
 
     if (temp == 1) result.d = log((double)p);
     return result;

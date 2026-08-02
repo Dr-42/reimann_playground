@@ -13,9 +13,11 @@ int main(void) {
     }
     printf("\n");
 
-    num_t test_val = { .type = INT, .i = 8 };
+    num_t test_val = num_new_int(8);
+    num_t test_val2 = num_new_int(10);
     num_t l_res = lambda(test_val);
     printf("lambda(%d) = %f\n", test_val.i, l_res.d);
+    num_t l_res2 = lambda(test_val2);
 
     prime_free();
     return 0;

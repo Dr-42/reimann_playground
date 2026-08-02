@@ -1,4 +1,5 @@
 #include "prime.h"
+#include "num.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -74,7 +75,7 @@ void sieve(int ceiling) {
 
     if (known_primes.len == 0) {
         if (ceiling >= 2) {
-            num_t first = { .type = INT, .i = 2 };
+            num_t first = num_new_int(2);
             num_vec_push(&known_primes, first);
         } else {
             return;
@@ -87,7 +88,7 @@ void sieve(int ceiling) {
     int start = largest.i + 1;
     for (int i = start; i <= ceiling; i++) {
         if (is_prime(i)) {
-            num_t data = { .type = INT, .i = i };
+            num_t data = num_new_int(i);
             num_vec_push(&known_primes, data);
         }
     }
