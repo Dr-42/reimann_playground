@@ -10,6 +10,6 @@ int main(void) {
         {psi, 220, 60, 60},      // red
         {identity, 60, 220, 60}, // green
     };
-    plot_jpg(traces, 3, -10, 1000, 900, 500, "overlay.jpg", 90);
+    plot_jpg(traces, 3, -10, 100, 900, 500, "overlay.jpg", 90);
     return 0;
 }
