@@ -1,14 +1,10 @@
 #include "num_vec.h"
-
 #include <stdlib.h>
 
 #define DEFAULT_CAP 10
 
 num_vec_t* num_vec_new(size_t cap) {
-    if (cap == 0) {
-        cap = DEFAULT_CAP;
-    }
-
+    if (cap == 0) cap = DEFAULT_CAP;
     num_vec_t* vec = malloc(sizeof(num_vec_t));
     vec->len = 0;
     vec->cap = cap;
