@@ -2,7 +2,7 @@
 #include <math.h>
 
 num_t lambda(num_t x) {
-    num_t result = num_new_double(0.0);
+    num_t result = {.type = DOUBLE, .d = 0.0};
 
     if (x.type != INT || x.i <= 1) return result;
 
@@ -22,5 +22,33 @@ num_t lambda(num_t x) {
         temp /= p;
 
     if (temp == 1) result.d = log((double)p);
+    return result;
+}
+
+num_t sine(num_t x) {
+    num_t result = {.type = DOUBLE, .d = 0.0};
+
+    double val = 0.0;
+    if (x.type == INT)
+        val = (double)x.i;
+    else if (x.type == DOUBLE)
+        val = x.d;
+    else
+        return result; // COMPLEX not supported for sine yet
+
+    result.d = sin(val);
+    return result;
+}
+
+num_t cosine(num_t x) {
+    num_t result = {.type = DOUBLE, .d = 0.0};
+    double val = 0.0;
+    if (x.type == INT)
+        val = (double)x.i;
+    else if (x.type == DOUBLE)
+        val = x.d;
+    else
+        return result; // COMPLEX not supported for cosine yet
+    result.d = cos(val);
     return result;
 }
