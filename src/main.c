@@ -8,6 +8,6 @@ int main(void) {
         {sine, 220, 60, 60},    // red
         {cosine, 60, 220, 60},  // green
     };
-    plot_jpg(traces, 1, -10, 100000, 900, 500, "overlay.jpg", 90);
+    plot_jpg(traces, 3, -10, 100, 900, 500, "overlay.jpg", 90);
     return 0;
 }

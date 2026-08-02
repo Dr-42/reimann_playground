@@ -4,11 +4,17 @@
 num_t lambda(num_t x) {
     num_t result = {.type = DOUBLE, .d = 0.0};
 
-    if (x.type != INT || x.i <= 1) return result;
+    int n;
+    if (x.type == INT) {
+        n = x.i;
+    } else if (x.type == DOUBLE) {
+        n = (int)(x.d + 0.5); // nearest integer
+    } else {
+        return result; // COMPLEX → 0
+    }
+    if (n <= 1) return result;
 
-    int n = x.i;
     int p = 0;
-
     for (int i = 2; i * i <= n; i++) {
         if (n % i == 0) {
             p = i;
