@@ -276,29 +276,94 @@ static Image* render(plot_trace_t* traces, int n_traces, int x_min, int x_max, i
     }
 
     /* ---------- axis crossing labels ---------- */
+    /* ---------- axis crossing labels with staircase ---------- */
+    typedef struct {
+        double x;
+        int is_up; // 1 if crossing upward (negative→positive)
+        char label[32];
+        int width;  // pixel width of label
+        int offset; // vertical offset from axis (positive = down)
+    } cross_t;
+
+    cross_t crossings[256]; // enough for reasonable range
+    int n_cross = 0;
+
     for (int t = 0; t < n_traces; t++) {
         for (int i = 0; i < nsamp - 1; i++) {
             double y0 = y_all[t][i];
             double y1 = y_all[t][i + 1];
             if (isnan(y0) || isnan(y1) || isinf(y0) || isinf(y1)) continue;
             if ((y0 > 0 && y1 < 0) || (y0 < 0 && y1 > 0)) {
-                // linear interpolation of crossing
                 double t_interp = -y0 / (y1 - y0);
                 double x_cross = x_val[i] + t_interp * (x_val[i + 1] - x_val[i]);
-                int px = map_x(&map, x_cross);
-                int py = map_y(&map, 0.0);
-                // black dot at crossing
-                for (int dy = -1; dy <= 1; dy++)
-                    for (int dx = -1; dx <= 1; dx++)
-                        img_set(im, px + dx, py + dy, 0, 0, 0);
-                // label with x-coordinate
-                char buf[32];
-                snprintf(buf, sizeof(buf), "%.4g", x_cross);
-                int tw = text_width(buf);
-                // place above the dot
-                img_text(im, px - tw / 2, py - FONT_H - 2, buf, 0, 0, 0);
+                // only store if not a duplicate with same trace (rare, but skip if exactly same x)
+                int dup = 0;
+                for (int k = 0; k < n_cross; k++) {
+                    if (fabs(crossings[k].x - x_cross) < 1e-6) {
+                        dup = 1;
+                        break;
+                    }
+                }
+                if (dup) continue;
+
+                cross_t* c = &crossings[n_cross++];
+                c->x = x_cross;
+                c->is_up = (y1 > y0); // upward if y1 > y0
+                snprintf(c->label, sizeof(c->label), "%.4g", x_cross);
+                c->width = text_width(c->label);
+                // initial offset: above for up, below for down
+                const int tick_half = 6;
+                c->offset = c->is_up ? -(tick_half + 4) : (tick_half + 4);
             }
         }
+    }
+
+    // Sort crossings by x (simple bubble for small n, or use qsort)
+    for (int i = 0; i < n_cross - 1; i++) {
+        for (int j = i + 1; j < n_cross; j++) {
+            if (crossings[i].x > crossings[j].x) {
+                cross_t tmp = crossings[i];
+                crossings[i] = crossings[j];
+                crossings[j] = tmp;
+            }
+        }
+    }
+
+    // Staircase adjustment
+    const int label_height = FONT_H;
+    const int gap = 2;
+    const int label_step = label_height + gap;
+    for (int i = 0; i < n_cross; i++) {
+        for (int j = 0; j < i; j++) {
+            // horizontal overlap?
+            int half_i = crossings[i].width / 2;
+            int half_j = crossings[j].width / 2;
+            int horiz_gap = 4;
+            if (fabs(crossings[i].x - crossings[j].x) * map.ppu < half_i + half_j + horiz_gap) {
+                // vertical overlap?
+                if (abs(crossings[i].offset - crossings[j].offset) < label_height + gap) {
+                    // push away from axis
+                    if (crossings[i].offset > 0)
+                        crossings[i].offset += label_step;
+                    else
+                        crossings[i].offset -= label_step;
+                    // restart check for this i (simple loop, restart)
+                    j = -1; // restart inner loop
+                }
+            }
+        }
+    }
+
+    // Now draw ticks and labels
+    for (int i = 0; i < n_cross; i++) {
+        int px = map_x(&map, crossings[i].x);
+        int py = map_y(&map, 0.0);
+        // Vertical line from axis to the label's vertical center
+        int label_center_y = py + crossings[i].offset;
+        img_line(im, px, py, px, label_center_y, 0, 0, 0);
+        // Label centred at that end point
+        int label_y = label_center_y - FONT_H / 2;
+        img_text(im, px - crossings[i].width / 2, label_y, crossings[i].label, 0, 0, 0);
     }
 
     /* --- cleanup --- */
