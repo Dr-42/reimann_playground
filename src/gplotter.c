@@ -387,35 +387,35 @@ static Image* render(plot_trace_t* traces, int n_traces, int x_min, int x_max, i
 
 /* ---------- public API ---------- */
 
-void plot_jpg(plot_trace_t* traces, int n_traces, int x_min, int x_max, int img_w, int img_h, const char* filename,
-              int quality) {
-    Image* im = render(traces, n_traces, x_min, x_max, img_w, img_h);
+void plot_jpg(plot_trace_t* traces, int n_traces, plot_settings_t* settings) {
+    Image* im = render(traces, n_traces, settings->x_min, settings->x_max, settings->img_width, settings->img_height);
     if (!im) return;
-    if (!stbi_write_jpg(filename, img_w, img_h, 3, im->data, quality))
-        fprintf(stderr, "plot_jpg: failed to write %s\n", filename);
+    if (!stbi_write_jpg(settings->filename, settings->img_width, settings->img_height, 3, im->data, settings->quality))
+        fprintf(stderr, "plot_jpg: failed to write %s\n", settings->filename);
     else
-        printf("plot_jpg: wrote %s (%d×%d q=%d)\n", filename, img_w, img_h, quality);
+        printf("plot_jpg: wrote %s (%d×%d q=%d)\n", settings->filename, settings->img_width, settings->img_height,
+               settings->quality);
     img_free(im);
 }
 
-void plot_jpg1(plot_func_t f, int x_min, int x_max, int img_w, int img_h, const char* filename, int quality) {
+void plot_jpg1(plot_func_t f, plot_settings_t* settings) {
     plot_trace_t tr = {f, 50, 100, 220};
-    plot_jpg(&tr, 1, x_min, x_max, img_w, img_h, filename, quality);
+    plot_jpg(&tr, 1, settings);
 }
 
-void plot_ppm(plot_func_t f, int x_min, int x_max, int img_w, int img_h, const char* filename) {
+void plot_ppm(plot_func_t f, int num_traces, plot_settings_t* settings) {
     plot_trace_t tr = {f, 50, 100, 220};
-    Image* im = render(&tr, 1, x_min, x_max, img_w, img_h);
+    Image* im = render(&tr, num_traces, settings->x_min, settings->x_max, settings->img_width, settings->img_height);
     if (!im) return;
-    FILE* fp = fopen(filename, "wb");
+    FILE* fp = fopen(settings->filename, "wb");
     if (!fp) {
-        perror(filename);
+        perror(settings->filename);
         img_free(im);
         return;
     }
-    fprintf(fp, "P6\n%d %d\n255\n", img_w, img_h);
-    fwrite(im->data, 1, img_w * img_h * 3, fp);
+    fprintf(fp, "P6\n%d %d\n255\n", settings->img_width, settings->img_height);
+    fwrite(im->data, 1, settings->img_width * settings->img_height * 3, fp);
     fclose(fp);
-    printf("plot_ppm: wrote %s (%d×%d)\n", filename, img_w, img_h);
+    printf("plot_ppm: wrote %s (%d×%d)\n", settings->filename, settings->img_width, settings->img_height);
     img_free(im);
 }

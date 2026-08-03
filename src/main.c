@@ -12,6 +12,16 @@ int main(void) {
         {hardy_z, 120, 20, 180},      // purple
     };
     int scalar = 5;
-    plot_jpg(traces, 4, -2, 50 * scalar, 1024 * scalar, 1024 * scalar, "overlay.jpg", 90);
+
+    plot_settings_t settings = {
+        .x_min = -2,
+        .x_max = 300,
+        .img_width = 1024 * scalar,
+        .img_height = 1024 * scalar,
+        .filename = "overlay.jpg",
+        .quality = 90,
+    };
+
+    plot_jpg(traces, 4, &settings);
     return 0;
 }

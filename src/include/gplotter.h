@@ -11,14 +11,20 @@ typedef struct {
     unsigned char r, g, b;
 } plot_trace_t;
 
+typedef struct {
+    int x_min, x_max;
+    int img_width, img_height;
+    char* filename;
+    int quality;
+} plot_settings_t;
+
 /* multi‑trace JPEG – all traces share the same auto‑scaled axes */
-void plot_jpg(plot_trace_t* traces, int n_traces, int x_min, int x_max, int img_width, int img_height,
-              const char* filename, int quality);
+void plot_jpg(plot_trace_t* traces, int num_traces, plot_settings_t* settings);
 
 /* convenience single‑trace (blue) */
-void plot_jpg1(plot_func_t f, int x_min, int x_max, int img_width, int img_height, const char* filename, int quality);
+void plot_jpg1(plot_func_t f, plot_settings_t* settings);
 
 /* single‑trace PPM (kept for quick viewing) */
-void plot_ppm(plot_func_t f, int x_min, int x_max, int img_width, int img_height, const char* filename);
+void plot_ppm(plot_func_t f, int num_traces, plot_settings_t* settings);
 
 #endif // GPLOTTER_H
