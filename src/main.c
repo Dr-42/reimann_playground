@@ -11,6 +11,7 @@ int main(void) {
         {identity, 60, 220, 60},      // green
         {hardy_z, 120, 20, 180},      // purple
     };
-    plot_jpg(traces, 4, -2, 400, 1024 * 4, 1024 * 4, "overlay.jpg", 90);
+    int scalar = 5;
+    plot_jpg(traces, 4, -2, 50 * scalar, 1024 * scalar, 1024 * scalar, "overlay.jpg", 90);
     return 0;
 }

@@ -276,17 +276,18 @@ static Image* render(plot_trace_t* traces, int n_traces, int x_min, int x_max, i
     }
 
     /* ---------- axis crossing labels ---------- */
-    /* ---------- axis crossing labels with staircase ---------- */
+    /* ---------- axis crossing labels with dynamic staircase ---------- */
     typedef struct {
         double x;
-        int is_up; // 1 if crossing upward (negative→positive)
+        int is_up; // 1 if upward crossing
         char label[32];
         int width;  // pixel width of label
         int offset; // vertical offset from axis (positive = down)
     } cross_t;
 
-    cross_t crossings[256]; // enough for reasonable range
+    cross_t* crossings = NULL;
     int n_cross = 0;
+    int cap_cross = 0;
 
     for (int t = 0; t < n_traces; t++) {
         for (int i = 0; i < nsamp - 1; i++) {
@@ -296,7 +297,8 @@ static Image* render(plot_trace_t* traces, int n_traces, int x_min, int x_max, i
             if ((y0 > 0 && y1 < 0) || (y0 < 0 && y1 > 0)) {
                 double t_interp = -y0 / (y1 - y0);
                 double x_cross = x_val[i] + t_interp * (x_val[i + 1] - x_val[i]);
-                // only store if not a duplicate with same trace (rare, but skip if exactly same x)
+
+                // check duplicate
                 int dup = 0;
                 for (int k = 0; k < n_cross; k++) {
                     if (fabs(crossings[k].x - x_cross) < 1e-6) {
@@ -306,19 +308,33 @@ static Image* render(plot_trace_t* traces, int n_traces, int x_min, int x_max, i
                 }
                 if (dup) continue;
 
+                // ensure capacity
+                if (n_cross >= cap_cross) {
+                    cap_cross = (cap_cross == 0) ? 64 : cap_cross * 2;
+                    crossings = realloc(crossings, cap_cross * sizeof(cross_t));
+                    if (!crossings) {
+                        // allocation failed – free already allocated traces and return NULL
+                        for (int t2 = 0; t2 < n_traces; t2++)
+                            free(y_all[t2]);
+                        free(y_all);
+                        free(x_val);
+                        img_free(im);
+                        return NULL;
+                    }
+                }
+
                 cross_t* c = &crossings[n_cross++];
                 c->x = x_cross;
-                c->is_up = (y1 > y0); // upward if y1 > y0
+                c->is_up = (y1 > y0);
                 snprintf(c->label, sizeof(c->label), "%.4g", x_cross);
                 c->width = text_width(c->label);
-                // initial offset: above for up, below for down
                 const int tick_half = 6;
                 c->offset = c->is_up ? -(tick_half + 4) : (tick_half + 4);
             }
         }
     }
 
-    // Sort crossings by x (simple bubble for small n, or use qsort)
+    // Sort crossings by x (bubble sort – n is small enough)
     for (int i = 0; i < n_cross - 1; i++) {
         for (int j = i + 1; j < n_cross; j++) {
             if (crossings[i].x > crossings[j].x) {
@@ -335,38 +351,33 @@ static Image* render(plot_trace_t* traces, int n_traces, int x_min, int x_max, i
     const int label_step = label_height + gap;
     for (int i = 0; i < n_cross; i++) {
         for (int j = 0; j < i; j++) {
-            // horizontal overlap?
             int half_i = crossings[i].width / 2;
             int half_j = crossings[j].width / 2;
             int horiz_gap = 4;
             if (fabs(crossings[i].x - crossings[j].x) * map.ppu < half_i + half_j + horiz_gap) {
-                // vertical overlap?
                 if (abs(crossings[i].offset - crossings[j].offset) < label_height + gap) {
-                    // push away from axis
                     if (crossings[i].offset > 0)
                         crossings[i].offset += label_step;
                     else
                         crossings[i].offset -= label_step;
-                    // restart check for this i (simple loop, restart)
-                    j = -1; // restart inner loop
+                    j = -1; // restart
                 }
             }
         }
     }
 
-    // Now draw ticks and labels
+    // Draw leader lines and labels
     for (int i = 0; i < n_cross; i++) {
         int px = map_x(&map, crossings[i].x);
         int py = map_y(&map, 0.0);
-        // Vertical line from axis to the label's vertical center
         int label_center_y = py + crossings[i].offset;
         img_line(im, px, py, px, label_center_y, 0, 0, 0);
-        // Label centred at that end point
         int label_y = label_center_y - FONT_H / 2;
         img_text(im, px - crossings[i].width / 2, label_y, crossings[i].label, 0, 0, 0);
     }
 
     /* --- cleanup --- */
+    free(crossings);
     for (int t = 0; t < n_traces; t++)
         free(y_all[t]);
     free(y_all);
